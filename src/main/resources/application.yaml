@@ -1,0 +1,31 @@
+constants:
+  database:
+    jdbc-url: jdbc:postgresql://localhost:5432/r2dbc
+    r2dbc-url: r2dbc:postgresql://localhost:5432/r2dbc
+    username: test
+    password: test
+
+spring:
+  datasource:
+    username: ${constants.database.username}
+    password: ${constants.database.password}
+    url: ${constants.database.jdbc-url}
+
+  r2dbc:
+    url: ${constants.database.r2dbc-url}
+    username: ${constants.database.username}
+    password: ${constants.database.password}
+    pool:
+      enabled: false
+
+  liquibase:
+    url: ${constants.database.jdbc-url}
+    user: ${constants.database.username}
+    password: ${constants.database.password}
+    enabled: true
+    change-log: classpath:db/migration/changelog.yaml
+    drop-first: true
+
+logging:
+  level:
+    root: info

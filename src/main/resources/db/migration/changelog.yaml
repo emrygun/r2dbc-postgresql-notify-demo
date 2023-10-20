@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - changeSet:
+      id:  '1'
+      author: emreuygun
+      changes:
+        # Create 'Message' table
+        - createTable:
+            tableName: message
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: message
+                  type: VARCHAR(50)
+              - column:
+                  name: owner
+                  type: VARCHAR(50)
+        # Insert sample data
+        - insert:
+            schemaName: public
+            tableName: message
+            columns:
+              -  column:
+                   name: id
+                   value: 1
+              - column:
+                  name: message
+                  value: Hello World
+              - column:
+                  name: owner
+                  value: USER
+        # Create trigger function for Message insert notifies
+        - sql:
+            comment: "Create new message notify trigger function for 'message_insert_chanel'"
+            dbms: postgresql
+            sql: |
+              CREATE FUNCTION on_new_message() RETURNS trigger as $$
+                DECLARE
+                BEGIN
+                  PERFORM pg_notify('message_insert_channel', row_to_json(NEW)::text);
+                  RETURN NEW;
+                END $$ 
+              LANGUAGE plpgsql
+        # Initialize trigger function for Message insert notifies
+        - sql:
+            comment: "Initialize new message notify trigger"
+            dbms: postgresql
+            sql: |
+              CREATE TRIGGER new_message_insert 
+              AFTER INSERT
+              ON message
+              FOR EACH ROW
+              EXECUTE PROCEDURE on_new_message()
